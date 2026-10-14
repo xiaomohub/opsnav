@@ -1,0 +1,41 @@
+{
+  "name": "opsnav",
+  "version": "1.0.0",
+  "private": true,
+  "description": "OpsNav — site navigation and Web SSH asset management",
+  "scripts": {
+    "build:server": "esbuild server.ts --bundle --platform=node --format=cjs --packages=external --outfile=dist/server.cjs",
+    "dev": "NODE_ENV=production next build && npm run build:server && NODE_ENV=production node --require ./scripts/als-polyfill.cjs dist/server.cjs",
+    "build": "next build && npm run build:server",
+    "start": "NODE_ENV=production node --require ./scripts/als-polyfill.cjs dist/server.cjs",
+    "lint": "next lint",
+    "smoke": "tsx scripts/smoke.ts"
+  },
+  "dependencies": {
+    "@xterm/addon-fit": "^0.10.0",
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^11.8.1",
+    "iron-session": "^8.0.4",
+    "next": "^15.1.0",
+    "otplib": "^12.0.1",
+    "qrcode": "^1.5.4",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "ssh2": "^1.16.0",
+    "ws": "^8.18.0",
+    "xterm": "^5.3.0"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^22.10.0",
+    "@types/qrcode": "^1.5.5",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@types/ssh2": "^1.15.6",
+    "@types/ws": "^8.5.13",
+    "esbuild": "^0.24.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
