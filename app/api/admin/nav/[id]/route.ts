@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb } from "@/lib/db";
-import { getSession } from "@/lib/session";
+import { requireLoggedInSession } from "@/lib/auth/totp-access";
+import { deleteNavEntry, updateNavEntry } from "@/lib/nav/repository";
 
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  getDb();
-  const session = await getSession();
-  if (!session.userId) {
-    return NextResponse.json({ error: "未登录" }, { status: 401 });
+  const auth = await requireLoggedInSession();
+  if (auth.denied) {
+    return NextResponse.json({ error: auth.denied.error }, { status: auth.denied.status });
   }
   const { id } = await params;
   const body = await req.json();
@@ -19,11 +18,7 @@ export async function PUT(
   if (!name || !url) {
     return NextResponse.json({ error: "名称和 URL 必填" }, { status: 400 });
   }
-  getDb()
-    .prepare(
-      `UPDATE nav_entries SET name = ?, url = ?, description = ?, updated_at = datetime('now') WHERE id = ?`
-    )
-    .run(name, url, description, Number(id));
+  await updateNavEntry(Number(id), { name, url, description });
   return NextResponse.json({ ok: true });
 }
 
@@ -31,12 +26,11 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  getDb();
-  const session = await getSession();
-  if (!session.userId) {
-    return NextResponse.json({ error: "未登录" }, { status: 401 });
+  const auth = await requireLoggedInSession();
+  if (auth.denied) {
+    return NextResponse.json({ error: auth.denied.error }, { status: auth.denied.status });
   }
   const { id } = await params;
-  getDb().prepare("DELETE FROM nav_entries WHERE id = ?").run(Number(id));
+  await deleteNavEntry(Number(id));
   return NextResponse.json({ ok: true });
 }

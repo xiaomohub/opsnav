@@ -1,0 +1,49 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AuthType {
+  password
+  private_key
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  passwordHash String   @map("password_hash")
+  totpSecret   String?  @map("totp_secret")
+  totpEnabled  Boolean  @default(false) @map("totp_enabled")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("users")
+}
+
+model NavEntry {
+  id          Int      @id @default(autoincrement())
+  name        String
+  url         String
+  description String   @default("")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("nav_entries")
+}
+
+model Asset {
+  id              Int      @id @default(autoincrement())
+  name            String
+  host            String
+  port            Int      @default(22)
+  username        String
+  authType        AuthType @map("auth_type")
+  secretEncrypted String   @map("secret_encrypted")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("assets")
+}

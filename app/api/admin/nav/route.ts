@@ -1,28 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb } from "@/lib/db";
-import { getSession } from "@/lib/session";
-
-function requireLogin() {
-  return getSession();
-}
+import { requireLoggedInSession } from "@/lib/auth/totp-access";
+import { createNavEntry, listNavEntries } from "@/lib/nav/repository";
 
 export async function GET() {
-  getDb();
-  const session = await requireLogin();
-  if (!session.userId) {
-    return NextResponse.json({ error: "未登录" }, { status: 401 });
+  const auth = await requireLoggedInSession();
+  if (auth.denied) {
+    return NextResponse.json({ error: auth.denied.error }, { status: auth.denied.status });
   }
-  const items = getDb()
-    .prepare(`SELECT id, name, url, description FROM nav_entries ORDER BY updated_at DESC`)
-    .all();
+  const items = await listNavEntries();
   return NextResponse.json({ items });
 }
 
 export async function POST(req: NextRequest) {
-  getDb();
-  const session = await requireLogin();
-  if (!session.userId) {
-    return NextResponse.json({ error: "未登录" }, { status: 401 });
+  const auth = await requireLoggedInSession();
+  if (auth.denied) {
+    return NextResponse.json({ error: auth.denied.error }, { status: auth.denied.status });
   }
   const body = await req.json();
   const name = String(body.name ?? "").trim();
@@ -31,10 +23,6 @@ export async function POST(req: NextRequest) {
   if (!name || !url) {
     return NextResponse.json({ error: "名称和 URL 必填" }, { status: 400 });
   }
-  const result = getDb()
-    .prepare(
-      `INSERT INTO nav_entries (name, url, description) VALUES (?, ?, ?)`
-    )
-    .run(name, url, description);
-  return NextResponse.json({ id: result.lastInsertRowid });
+  const id = await createNavEntry({ name, url, description });
+  return NextResponse.json({ id });
 }

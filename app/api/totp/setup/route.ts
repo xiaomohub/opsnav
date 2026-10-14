@@ -1,28 +1,24 @@
 import QRCode from "qrcode";
 import { NextResponse } from "next/server";
-import { findUserById } from "@/lib/auth";
-import { getDb } from "@/lib/db";
-import { getSession } from "@/lib/session";
+import { findUserById, setUserTotpSecret } from "@/lib/auth";
+import { requireLoggedInSession } from "@/lib/auth/totp-access";
 import { generateTotpSecret, getTotpUri } from "@/lib/totp";
 
 export async function POST() {
-  getDb();
-  const session = await getSession();
-  if (!session.userId) {
-    return NextResponse.json({ error: "未登录" }, { status: 401 });
+  const auth = await requireLoggedInSession();
+  if (auth.denied) {
+    return NextResponse.json({ error: auth.denied.error }, { status: auth.denied.status });
   }
-  const user = findUserById(session.userId);
+  const user = await findUserById(auth.session!.userId!);
   if (!user) {
     return NextResponse.json({ error: "用户不存在" }, { status: 401 });
   }
-  if (user.totp_enabled) {
+  if (user.totpEnabled) {
     return NextResponse.json({ error: "已绑定 TOTP" }, { status: 400 });
   }
 
   const secret = generateTotpSecret();
-  getDb()
-    .prepare("UPDATE users SET totp_secret = ? WHERE id = ?")
-    .run(secret, user.id);
+  await setUserTotpSecret(user.id, secret);
 
   const uri = getTotpUri(user.username, secret);
   const qrDataUrl = await QRCode.toDataURL(uri);
