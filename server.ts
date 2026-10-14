@@ -2,9 +2,9 @@ import { createServer } from "http";
 import { parse } from "url";
 import next from "next";
 import { WebSocketServer } from "ws";
+import { ensureDatabase } from "./lib/db/init";
 import { config } from "./lib/config";
-import { getDb } from "./lib/db";
-import { handleSshWebSocket } from "./lib/ssh-ws";
+import { handleSshWebSocket } from "./lib/ssh/ws";
 
 // Custom server is stable with Next in production mode (dev mode triggers ALS issues on Node 22).
 const dev = false;
@@ -14,9 +14,9 @@ const port = config.port();
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
 
-app.prepare().then(() => {
-  getDb();
-  console.log(`[server] Database ready at ${config.databasePath()}`);
+app.prepare().then(async () => {
+  await ensureDatabase();
+  console.log("[server] PostgreSQL connected (Prisma)");
   console.log(`[server] SSH_DEMO_MODE=${config.sshDemoMode()}`);
 
   const server = createServer((req, res) => {

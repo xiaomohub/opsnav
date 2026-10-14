@@ -1,22 +1,21 @@
 import { NavList } from "@/components/NavList";
-import { getDb } from "@/lib/db";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { listNavEntries } from "@/lib/nav/repository";
 
 export const dynamic = "force-dynamic";
 
-export default function PublicNavPage() {
-  const items = getDb()
-    .prepare(
-      `SELECT id, name, url, description FROM nav_entries ORDER BY updated_at DESC`
-    )
-    .all() as { id: number; name: string; url: string; description: string }[];
+export default async function PublicNavPage() {
+  const items = await listNavEntries();
 
   return (
-    <div className="container">
-      <h1>站点导航</h1>
-      <p className="muted">公开列表，无需登录。</p>
-      <div className="card">
+    <>
+      <PageHeader
+        title="站点导航"
+        description="公开书签列表，无需登录即可访问。"
+      />
+      <div className="panel">
         <NavList items={items} />
       </div>
-    </div>
+    </>
   );
 }

@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: opsnav
+      POSTGRES_PASSWORD: opsnav
+      POSTGRES_DB: opsnav
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - opsnav_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U opsnav -d opsnav"]
+      interval: 3s
+      timeout: 5s
+      retries: 12
+
+volumes:
+  opsnav_pg_data:

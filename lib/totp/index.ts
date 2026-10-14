@@ -1,5 +1,5 @@
 import { authenticator } from "otplib";
-import { config } from "./config";
+import { config } from "../config";
 
 authenticator.options = { window: 1 };
 

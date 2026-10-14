@@ -1,12 +1,13 @@
+import type { Asset } from "@prisma/client";
 import type { IncomingMessage } from "http";
+import { unsealData } from "iron-session";
 import { Client } from "ssh2";
 import type WebSocket from "ws";
-import { unsealData } from "iron-session";
-import { findUserById } from "./auth";
-import { decryptSecret } from "./crypto";
-import { getDb, type AssetRow } from "./db";
-import { isTotpUnlocked, sessionOptions, type SessionData } from "./session";
-import { config } from "./config";
+import { findUserById } from "../auth";
+import { findAssetById } from "../assets/repository";
+import { config } from "../config";
+import { decryptSecret } from "../crypto";
+import { isTotpUnlocked, sessionOptions, type SessionData } from "../session";
 
 type WsMessage =
   | { type: "resize"; cols: number; rows: number }
@@ -94,8 +95,8 @@ function runDemoShell(ws: WebSocket) {
   });
 }
 
-function runRealSsh(ws: WebSocket, asset: AssetRow) {
-  const secret = decryptSecret(asset.secret_encrypted);
+function runRealSsh(ws: WebSocket, asset: Asset) {
+  const secret = decryptSecret(asset.secretEncrypted);
   const conn = new Client();
 
   conn
@@ -139,7 +140,7 @@ function runRealSsh(ws: WebSocket, asset: AssetRow) {
     username: asset.username,
     readyTimeout: 20000,
   };
-  if (asset.auth_type === "password") {
+  if (asset.authType === "password") {
     connectOpts.password = secret;
   } else {
     connectOpts.privateKey = secret;
@@ -158,8 +159,8 @@ export async function handleSshWebSocket(ws: WebSocket, req: IncomingMessage) {
     return;
   }
 
-  const user = findUserById(session.userId);
-  if (!user?.totp_enabled) {
+  const user = await findUserById(session.userId);
+  if (!user?.totpEnabled) {
     send(ws, "\r\n请先绑定并验证 TOTP。\r\n");
     ws.close();
     return;
@@ -176,9 +177,7 @@ export async function handleSshWebSocket(ws: WebSocket, req: IncomingMessage) {
     return;
   }
 
-  const asset = getDb()
-    .prepare("SELECT * FROM assets WHERE id = ?")
-    .get(assetId) as AssetRow | undefined;
+  const asset = await findAssetById(assetId);
   if (!asset) {
     send(ws, "\r\n资产不存在。\r\n");
     ws.close();

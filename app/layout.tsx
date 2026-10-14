@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { SiteHeader } from "@/components/SiteHeader";
+import { AppShell } from "@/components/layout/AppShell";
 
 export const metadata: Metadata = {
   title: "OpsNav",
@@ -11,8 +11,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="zh-CN">
       <body>
-        <SiteHeader />
-        <main>{children}</main>
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

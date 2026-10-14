@@ -1,5 +1,3 @@
-import path from "path";
-
 function requireEnv(name: string, fallback?: string): string {
   const v = process.env[name] ?? fallback;
   if (!v) {
@@ -14,8 +12,7 @@ export const config = {
     requireEnv("DATA_ENCRYPTION_KEY", "dev-only-encryption-key-change-me!!"),
   adminUsername: () => requireEnv("ADMIN_USERNAME", "admin"),
   adminPassword: () => requireEnv("ADMIN_PASSWORD", "changeme"),
-  databasePath: () =>
-    path.resolve(process.cwd(), requireEnv("DATABASE_PATH", "./data/opsnav.db")),
+  databaseUrl: () => requireEnv("DATABASE_URL"),
   sshDemoMode: () => process.env.SSH_DEMO_MODE !== "false",
   host: () => requireEnv("HOST", "0.0.0.0"),
   port: () => parseInt(requireEnv("PORT", "3000"), 10),

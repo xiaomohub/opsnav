@@ -35,7 +35,7 @@ export function LoginForm() {
 
   return (
     <>
-      {error && <div className="alert error">{error}</div>}
+      {error && <div className="alert alert-error">{error}</div>}
       <form onSubmit={onSubmit}>
         <label htmlFor="username">用户名</label>
         <input id="username" name="username" required autoComplete="username" />
@@ -47,7 +47,7 @@ export function LoginForm() {
           required
           autoComplete="current-password"
         />
-        <button className="btn" type="submit" disabled={loading}>
+        <button className="btn btn-primary" type="submit" disabled={loading} style={{ width: "100%" }}>
           {loading ? "登录中…" : "登录"}
         </button>
       </form>
